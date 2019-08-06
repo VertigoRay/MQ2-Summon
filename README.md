@@ -16,13 +16,15 @@ I mostly use it to summon [cookies](http://everquest.allakhazam.com/db/item.html
 ## Quick Usage
 
 > /mac summon [stacks [food|drink]]
-> 
-> stacks = # stacks to summon (default to 1)
->   no addtional parameters will do food and drink, otherwise specify which one (if you want to specify food or drink then provide stacks also, even if it's 1)
 
-/mac summon           -> summons 1 stack of everything you have defined unless Settings>DefaultSummon is set in the INI.
-/mac summon 3         -> summons 3 stacks of food and drink (includes checking inventory for any existing items)
-/mac summon 2 drink   -> summons 2 stack of drink (includes checking inventory for any existing items)
+- stacks = # stacks to summon (default to whatever is set per section)
+- no addtional parameters will summon whatever is defined in `Settings>DefaultSummon`, otherwise specify which one(s)
+
+```
+/mac summon           -> summons the quantities of each section defined in `Settings>DefaultSummon` in the INI.
+/mac summon 3         -> summons 3 stacks of each section defined in `Settings>DefaultSummon` in the INI.
+/mac summon 2 drink   -> summons 2 stack of drink (includes checking inventory for any existing items).
+```
 
 # Detailed Usage
 
