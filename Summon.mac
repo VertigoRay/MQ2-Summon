@@ -1,0 +1,352 @@
+| Summon Food and Drink Macro - hacked together from some unknown public authors by htw 12-03-18
+|  Was in a hurry and not thouroughly tested but it should get the job done!
+| Initial idea taken from SummonFD and improved to handled most other summoning cases. -VertigoRay 2019 Jul 27
+|
+| Usage:  /mac summon [stacks [food|drink]]
+|   stacks = # stacks to summon (default to 1)
+|   no addtional parameters will do food and drink, otherwise specify which one (if you want to specify food or drink then provide stacks also, even if it's 1)
+|
+| /mac summonfd           -> summons 1 stack of everything you have defined unless Settings>DefaultSummon is set in the INI.
+| /mac summonfd 3         -> summons 3 stacks of food and drink (includes checking inventory for any existing items)
+| /mac summonfd 2 drink   -> summons 2 stack of drink (includes checking inventory for any existing items)
+|
+| Example ini:
+|     [Settings]
+|     LogDebug=TRUE
+|     LogVerbose=TRUE
+|     DefaultSummon=Food|Drink
+|
+|     [Food]
+|     Name=Summon Food
+|     Cast=gem4
+|     Item=Summoned: Black Bread
+|     Qty=1                            ; Optional, this shows you the default value
+|     QtyIsByStack=TRUE                ; Optional, this shows you the default value
+|     QtyInStack=20                    ; Optional, this shows you the default value
+|
+|     [Drink]
+|     Name=Summon Drink
+|     Cast=gem5
+|     Item=Summoned: Globe of Water
+|     Qty=1                            ; Optional, this shows you the default value
+|     QtyIsByStack=TRUE                ; Optional, this shows you the default value
+|     QtyInStack=20                    ; Optional, this shows you the default value
+|
+|     [Cookies]
+|     Name=Fresh Cookie Dispenser
+|     Cast=Fresh Cookie Dispenser
+|     Item=Fresh Cookie
+|     Qty=1                            ; Optional, this shows you the default value
+|     QtyIsByStack=TRUE                ; Optional, this shows you the default value
+|     QtyInStack=20                    ; Optional, this shows you the default value
+|
+|     [Milk]
+|     Name=Warm Milk Dispenser
+|     Cast=Warm Milk Dispenser
+|     Item=Warm Milk
+|     Qty=1                            ; Optional, this shows you the default value
+|     QtyIsByStack=TRUE                ; Optional, this shows you the default value
+|     QtyInStack=20                    ; Optional, this shows you the default value
+|
+|
+| Configuration file to store character specific spells and items
+#define MyIni Summon_${Me.CleanName}_${MacroQuest.Server}.ini
+#Event inventoryFull "Inventory full"
+
+Sub Main(string sSummonWhat, string sSummonHowMany)
+	/echo \atStarting Summoning
+	
+	/if (!${Ini[MyIni].Length}) {
+		/echo \ayINI file doesn't exist or is empty. Creating a generic one for you.
+
+		/mmoini "MyIni" "Settings" "LogDebug" "FALSE"
+		/mmoini "MyIni" "Settings" "LogVerbose" "FALSE"
+		/mmoini "MyIni" "Settings" ";DefaultSummon" "Food|Drink"
+		/mmoini "MyIni" "Settings" "DefaultSummon" "ALL"
+
+		/mmoini "MyIni" "Food"    "Name" "Summon Food"
+		/mmoini "MyIni" "Food"    "Cast" "gem4"
+		/mmoini "MyIni" "Food"    "Item" "Summoned: Black Bread"
+		/mmoini "MyIni" "Food"    "Qty" "1"
+		/mmoini "MyIni" "Food"    "QtyIsByStack" "TRUE"
+		/mmoini "MyIni" "Food"    "QtyInStack" "20"
+
+		/mmoini "MyIni" "Drink"   "Name" "Summon Drink"
+		/mmoini "MyIni" "Drink"   "Cast" "gem5"
+		/mmoini "MyIni" "Drink"   "Item" "Summoned: Globe of Water"
+		/mmoini "MyIni" "Drink"   "Qty" "1"
+		/mmoini "MyIni" "Drink"   "QtyIsByStack" "TRUE"
+		/mmoini "MyIni" "Drink"   "QtyInStack" "20"
+
+		/mmoini "MyIni" "Cookies" "Name" "Fresh Cookie Dispenser"
+		/mmoini "MyIni" "Cookies" "Cast" "Fresh Cookie Dispenser"
+		/mmoini "MyIni" "Cookies" "Item" "Fresh Cookie"
+		/mmoini "MyIni" "Cookies" "Qty" "1"
+		/mmoini "MyIni" "Cookies" "QtyIsByStack" "TRUE"
+		/mmoini "MyIni" "Cookies" "QtyInStack" "20"
+		
+		/mmoini "MyIni" "Milk"    "Name" "Warm Milk Dispenser"
+		/mmoini "MyIni" "Milk"    "Cast" "Fresh Cookie Dispenser"
+		/mmoini "MyIni" "Milk"    "Item" "Warm Milk"
+		/mmoini "MyIni" "Milk"    "Qty" "1"
+		/mmoini "MyIni" "Milk"    "QtyIsByStack" "TRUE"
+		/mmoini "MyIni" "Milk"    "QtyInStack" "20	
+		
+		/return
+	}
+
+	/if (!${Plugin[MQ2Cecho].Name.Length}) {
+		/squelch /plugin mq2cecho noauto
+	}
+	/if (!${Plugin[MQ2Cast].Name.Length}) {
+		/squelch /plugin mq2cast noauto
+	}
+
+	/declare SummonWhat string outer DefaultSummon
+	/if (${sSummonWhat.Length}) {
+		/varset SummonWhat ${sSummonWhat}
+	} else {
+		/varset SummonWhat ${Ini[MyIni,Settings,DefaultSummon,ALL]}
+	}
+
+	/echo "Summon What: ${SummonWhat}"
+	
+	/declare LogDebug bool outer FALSE
+	/varset LogDebug ${Bool[${Ini[MyIni,Settings,LogDebug,FALSE]}]}
+	/declare LogVerbose bool outer FALSE
+	/varset LogVerbose ${Bool[${Ini[MyIni,Settings,LogVerbose,FALSE]}]}
+	
+	/declare sDefaultSummon string local NULL
+	/varset sDefaultSummon ${Bool[]}
+	
+	/declare sectionSepCount int local 0
+	/varcalc sectionSepCount ${Ini[MyIni].Count[|]} + 1
+
+
+	/call EchoDebug "INI Sections: ${Ini[MyIni]}"
+	/call EchoDebug "Pipe Count (sectionSepCount): ${sectionSepCount}"
+
+	/declare needMoreSummons bool local TRUE
+	/declare oldGemMemed[20] string local
+   	/declare section string local NULL
+	/declare sectionName string local NULL
+	/declare sectionCast string local NULL
+	/declare sectionItem string local NULL
+	/declare sectionGemNumb string int 0
+	/declare sectionQty int local 1
+	/declare sectionQtyIsByStack bool local TRUE
+	/declare sectionQtyInStack int local 20
+	/declare sectionQtyTotalEa int local 1
+	/declare sectionQtyCurr int local 0
+
+	/if (${Int[${sSummonHowMany}]}) /varset sectionQty ${sSummonHowMany}
+
+	/declare sectionNumber int local
+	:NeedMoreSummons
+		/for sectionNumber 1 to ${sectionSepCount}
+			/varset section ${Ini[MyIni].Token[${sectionNumber},|]}
+			/call EchoVerbose "Section ${sectionNumber}: ${section}"
+			
+			/if (${section.Equal[Settings]}) {
+				/call EchoDebug "Skipping reserved section: ${section}"
+			} else {
+				/if (${SummonWhat.EqualCS[ALL]} || ${StringSplitContains[${SummonWhat}, ${section}, |]}) {
+					/call EchoVerbose "Processing section: ${section}"
+					/if (!${section.Length}) {
+						/call EchoVerbose "Skipping *NULL* sections; these are just part of the INI parsing and cannot be avoided."
+						/goto :SectionLoopContinue
+					}
+
+					/call EchoDebug "INI Section Name: ${Ini[MyIni,${section},Name,FALSE]}"
+
+					/varset sectionName         ${Ini[MyIni,${section},Name,NULL]}
+					/varset sectionCast         ${Ini[MyIni,${section},Cast,NULL]}
+					/varset sectionItem         ${Ini[MyIni,${section},Item,NULL]}
+					/varset sectionQty          ${Ini[MyIni,${section},Qty,1]}
+					/varset sectionQtyIsByStack ${Ini[MyIni,${section},QtyIsByStack,TRUE]}
+					/varset sectionQtyInStack   ${Ini[MyIni,${section},QtyInStack,20]}
+					
+					/call EchoDebug "Name::${sectionName}::"
+					/call EchoDebug "Cast::${sectionCast}::"
+					/call EchoDebug "Item::${sectionItem}::"
+					/call EchoDebug "Qty::${sectionQty}::"
+					/call EchoDebug "QtyIsByStack::${sectionQtyIsByStack}::"
+					/call EchoDebug "QtyInStack::${sectionQtyInStack}::"
+
+					/if (${sectionQtyIsByStack}) {
+						/varcalc sectionQtyTotalEa ${sectionQtyInStack} * ${sectionQty}
+					} else {
+						/varset sectionQtyTotalEa ${sectionQty}
+					}
+					/call EchoDebug "QtyTotalEa::${sectionQtyTotalEa}::"
+					
+					/varset sectionQtyCurr ${FindItemCount[${sectionItem}]}
+					/call EchoDebug "QtyCurr::${sectionQtyCurr}::"
+
+					/if (${sectionQtyCurr} <= ${sectionQtyTotalEa}) {
+						/if (${sectionCast.Left[3].EqualCS[gem]} && ${Int[${sectionCast.Right[-3]}]}) {
+							/varset sectionGemNumb ${Int[${sectionCast.Right[-3]}]}
+							/call EchoDebug "Spell: ${sectionName}; On Gem: ${sectionGemNumb}"
+							/call EchoDebug "Current Gem 4: ${String[${Me.Gem[${sectionGemNumb}]}]}"
+
+							/if (!${Me.SpellReady["${sectionName}"]}) {
+								/if (!${String[${Me.Gem[${sectionGemNumb}]}].Equal[${sectionName}]}) {
+									/call EchoVerbose "Storing current Gem (${sectionGemNumb}: ${Me.Gem[${sectionGemNumb}]}) to recover it when we're done."
+									/varset oldGemMemed[${sectionGemNumb}] ${Me.Gem[${sectionGemNumb}]}
+
+									/echo \atMemorizing \au${sectionGemNumb} \aw-> \ag${sectionName}
+									/memspell ${sectionGemNumb} "${sectionName}"
+									:WaitMem
+										/if (!${Me.SpellReady["${sectionName}"]}) {
+											/call EchoDebug "Waiting for spell to be ready: ${sectionName}"
+											/delay 1
+											/goto :WaitMem
+										}
+									| END :WaitMem
+								}
+							}
+
+							/if (${Me.SpellReady["${sectionName}"]}) {
+								/if (${Windows[SpellBookWnd].Open}) {
+									/windowstate SpellBookWnd close
+								}
+								/echo \atSummoning \ay${sectionItem} \aw(\agInventory\aw=\ao${FindItemCount[=${sectionItem}]}\aw)
+								/cast "${sectionName}"
+								/delay ${Math.Calc[(${Me.Gem[${GemNum}].CastTime.Seconds}*10)+12]} ${Cursor.ID}
+								/autoinv
+							}
+
+						} else {
+							/if (${sectionCast.Left[2].EqualCS[aa]} && ${Int[${sectionCast.Right[-2]}]}) {
+								/varset sectionGemNumb ${Int[${sectionCast.Right[-2]}]}
+								/call EchoDebug "AA: ${sectionName}; AA ID: ${sectionGemNumb}"
+
+								/if (${Me.AltAbilityReady[${sectionGemNumb}]}) {
+									/echo \atSummoning \ay${sectionItem} \aw(\agInventory\aw=\ao${FindItemCount[=${sectionItem}]}\aw)
+									/alt activate ${sectionGemNumb}
+								} else {
+									/call EchoDebug "Skipping; ability not ready yet."
+								}
+							} else {
+								/call EchoDebug "Item: ${sectionName}"
+
+								/if (!${FindItem[=${sectionCast}].Timer}) {
+									/echo \atSummoning \ay${sectionItem} \aw(\agInventory\aw=\ao${FindItemCount[=${sectionItem}]}\aw)
+									| /useitem ${FindItem[=${sectionCast}].ItemSlot} ${FindItem[=${sectionCast}].ItemSlot2}
+									/cast item "${sectionCast}"
+									/delay 12 ${Cursor.ID}
+									/autoinv
+								} else {
+									/call EchoDebug "Skipping; item not ready yet."
+								}
+							}
+						}
+					} else {
+						/call EchoVerbose "Already Max Qty; Skipping."
+					}
+				} else {
+					/call EchoDebug "Skipping *currently unused* section: ${Section}"
+				}
+			}
+
+			:AutoInvAll
+				/if (${Cursor.ID} ) {
+					/autoinv
+					/goto :AutoInvAll
+				}
+			| END :AutoInvAll
+			
+			:SectionLoopContinue
+		/next sectionNumber
+		
+		/call EchoVerbose "Evaluate if we need to loop back and do more summons ..."
+		/for sectionNumber 1 to ${sectionSepCount}
+			/varset section ${Ini[MyIni].Token[${sectionNumber},|]}
+			/call EchoDebug "Section ${sectionNumber}: ${section}"
+			
+			/if (${section.Equal[Settings]}) {
+				/call EchoDebug "Skipping reserved section: ${section}"
+			} else {
+				/if (${SummonWhat.EqualCS[ALL]} || ${StringSplitContains[${SummonWhat}, ${section}, |]}) {
+					/varset sectionItem         ${Ini[MyIni,${section},Item,NULL]}
+					/varset sectionQty          ${Ini[MyIni,${section},Qty,1]}
+					/varset sectionQtyIsByStack ${Ini[MyIni,${section},QtyIsByStack,TRUE]}
+					/varset sectionQtyInStack   ${Ini[MyIni,${section},QtyInStack,20]}
+
+					/call EchoDebug "Qty::${sectionQty}::"
+					/call EchoDebug "QtyIsByStack::${sectionQtyIsByStack}::"
+					/call EchoDebug "QtyInStack::${sectionQtyInStack}::"
+
+					/if (${sectionQtyIsByStack}) {
+						/varcalc sectionQtyTotalEa ${sectionQtyInStack} * ${sectionQty}
+					} else {
+						/varset sectionQtyTotalEa ${sectionQty}
+					}
+					/call EchoDebug "QtyTotalEa::${sectionQtyTotalEa}::"
+					
+					/varcalc sectionQtyCurr ${FindItemCount[${sectionItem}]} - 1
+					/call EchoDebug "QtyCurr::${sectionQtyCurr}::"
+
+					/if (${sectionQtyCurr} < ${sectionQtyTotalEa}) {
+						/call EchoDebug "${section}: Needs ${sectionQtyTotalEa}, Curr ${sectionQtyCurr}: Need More"
+						/goto :NeedMoreSummons
+					}
+					/call EchoDebug "${section}: Needs ${sectionQtyTotalEa}, Curr ${sectionQtyCurr}: Summon Fulfilled"
+				} else {
+					/call EchoDebug "Skipping *currently unused* section: ${Section}"
+				}
+			}
+		/next sectionNumber
+		
+		/delay 1
+	| END :NeedMoreSummons
+
+	/echo \agThe summonings are complete.
+
+	/declare gemNumb int local 0
+	/for gemNumb 1 to ${oldGemMemed.Size}
+		/if (${Bool[${oldGemMemed[${gemNumb}]}]}) {
+			/call EchoSub "\atMemorizing \au${gemNumb} \aw-> \ag${oldGemMemed[${gemNumb}]}"						
+			/memspell ${gemNumb} "${FoodSpell}"
+		}
+	/next gemNumb
+/return
+
+Sub EchoVerbose(string what)
+	/if (!${Defined[LogVerbose]}) /declare LogVerbose bool outer FALSE
+	/if (${LogVerbose}) /echo \a-o ${what}
+/return
+
+Sub EchoDebug(string what)
+	/if (!${Defined[LogDebug]}) /declare LogDebug bool outer FALSE
+	/if (${LogDebug}) /echo \a-w ${what}
+/return
+
+Sub StringSplitContains(string TargetString, string SearchString, string Separator)
+	/call EchoDebug "> StringSplitContains(${TargetString}, ${SearchString}, ${Separator})"
+	
+	/declare targetStringSepCount int local
+	/varcalc targetStringSepCount ${TargetString.Count[|]} + 1
+	/call EchoDebug "# StringSplitContains: targetStringSepCount: ${targetStringSepCount}"
+
+	/declare stringPart string local NULL
+
+	/declare splitPartNum int local
+	/for splitPartNum 1 to ${targetStringSepCount}
+		/call EchoDebug "# StringSplitContains: splitPartNum: ${splitPartNum}"
+		/varset stringPart ${TargetString.Token[${splitPartNum},|]}
+		/call EchoDebug "# StringSplitContains: stringPart: ${stringPart}"
+
+		/if (${SearchString.Equal[${stringPart}]}) {
+			/call EchoDebug "< StringSplitContains TRUE"
+			/return TRUE
+		}
+	/next splitPartNum
+
+	/call EchoDebug "< StringSplitContains FALSE"
+/return FALSE
+
+Sub Event_SelfEcho(string Line, string Command)
+	/echo "\atInventory Full, done trying."
+	/endmac
+/return
