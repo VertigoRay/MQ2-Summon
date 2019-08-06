@@ -6,6 +6,8 @@ I mostly use it to summon [cookies](http://everquest.allakhazam.com/db/item.html
 
 # Quick Implementation
 
+![MQ2 Console Output](https://i.imgur.com/JwH6Axt.png)
+
 ## Quick Setup
 
 - Put the `Summon.mac` file in your *Macros* folder.
@@ -108,6 +110,8 @@ Here's how I use it:
     - [Cookies](http://everquest.allakhazam.com/db/item.html?item=104648): 6 stacks of 20, totaling 120 cookies.
     - [Milk](http://everquest.allakhazam.com/db/item.html?item=90001): 3 stacks of 20, totaling 60 glasses of milk.
     - [Tea](http://everquest.allakhazam.com/db/item.html?item=113131): 3 stacks of 20, totaling 60 glasses of tea.
+    
+![Summoning In Progress](https://i.imgur.com/s8u62hV.png)
 
 # Notes
 
