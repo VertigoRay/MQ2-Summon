@@ -1,55 +1,5 @@
-| Summon Food and Drink Macro - hacked together from some unknown public authors by htw 12-03-18
-|  Was in a hurry and not thouroughly tested but it should get the job done!
-| Initial idea taken from SummonFD and improved to handled most other summoning cases. -VertigoRay 2019 Jul 27
-|
-| Usage:  /mac summon [stacks [food|drink]]
-|   stacks = # stacks to summon (default to 1)
-|   no addtional parameters will do food and drink, otherwise specify which one (if you want to specify food or drink then provide stacks also, even if it's 1)
-|
-| /mac summonfd           -> summons 1 stack of everything you have defined unless Settings>DefaultSummon is set in the INI.
-| /mac summonfd 3         -> summons 3 stacks of food and drink (includes checking inventory for any existing items)
-| /mac summonfd 2 drink   -> summons 2 stack of drink (includes checking inventory for any existing items)
-|
-| Example ini:
-|     [Settings]
-|     LogDebug=TRUE
-|     LogVerbose=TRUE
-|     DefaultSummon=Food|Drink
-|
-|     [Food]
-|     Name=Summon Food
-|     Cast=gem4
-|     Item=Summoned: Black Bread
-|     Qty=1                            ; Optional, this shows you the default value
-|     QtyIsByStack=TRUE                ; Optional, this shows you the default value
-|     QtyInStack=20                    ; Optional, this shows you the default value
-|
-|     [Drink]
-|     Name=Summon Drink
-|     Cast=gem5
-|     Item=Summoned: Globe of Water
-|     Qty=1                            ; Optional, this shows you the default value
-|     QtyIsByStack=TRUE                ; Optional, this shows you the default value
-|     QtyInStack=20                    ; Optional, this shows you the default value
-|
-|     [Cookies]
-|     Name=Fresh Cookie Dispenser
-|     Cast=Fresh Cookie Dispenser
-|     Item=Fresh Cookie
-|     Qty=1                            ; Optional, this shows you the default value
-|     QtyIsByStack=TRUE                ; Optional, this shows you the default value
-|     QtyInStack=20                    ; Optional, this shows you the default value
-|
-|     [Milk]
-|     Name=Warm Milk Dispenser
-|     Cast=Warm Milk Dispenser
-|     Item=Warm Milk
-|     Qty=1                            ; Optional, this shows you the default value
-|     QtyIsByStack=TRUE                ; Optional, this shows you the default value
-|     QtyInStack=20                    ; Optional, this shows you the default value
-|
-|
-| Configuration file to store character specific spells and items
+| For help and updates, see: https://github.com/VertigoRay/MQ2-Summon
+
 #define MyIni Summon_${Me.CleanName}_${MacroQuest.Server}.ini
 #Event inventoryFull "Inventory full"
 
