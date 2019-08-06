@@ -23,8 +23,10 @@ I mostly use it to summon [cookies](http://everquest.allakhazam.com/db/item.html
 ```
 /mac summon           -> summons the quantities of each section defined in `Settings>DefaultSummon` in the INI.
 /mac summon 3         -> summons 3 stacks of each section defined in `Settings>DefaultSummon` in the INI.
-/mac summon 2 drink   -> summons 2 stack of drink (includes checking inventory for any existing items).
+/mac summon 2 drink   -> summons 2 stacks of drink.
 ```
+
+Al of these commands includes checking inventory for any existing items.
 
 # Detailed Usage
 
