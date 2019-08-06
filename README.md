@@ -26,7 +26,7 @@ I mostly use it to summon [cookies](http://everquest.allakhazam.com/db/item.html
 /mac summon 2 drink   -> summons 2 stacks of drink.
 ```
 
-Al of these commands includes checking inventory for any existing items.
+All of these commands includes checking inventory for any existing items.
 
 # Detailed Usage
 
